@@ -18,7 +18,9 @@ export const CTASection: React.FC<SectionProps> = ({ data, pageNumber }) => {
                     <img 
                         src="/images/contact_hero_v2.png" 
                         alt="Contact Hero" 
-                        className="w-full h-full object-cover grayscale-[0.2]"
+                        crossOrigin="anonymous"
+                        className="w-full h-full object-cover"
+                        onError={(e: any) => { e.target.src = "https://picsum.photos/seed/contact/1200/800"; }}
                     />
                 </div>
                 <div className="absolute bottom-0 left-0 w-full h-[40%] bg-gradient-to-t from-[#0D0D0D] to-transparent z-10" />
@@ -72,6 +74,7 @@ export const CTASection: React.FC<SectionProps> = ({ data, pageNumber }) => {
                                     <img 
                                         src="/images/support_network.png" 
                                         alt="Support Network" 
+                                        crossOrigin="anonymous"
                                         className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay group-hover:scale-110 transition-transform duration-700"
                                     />
                                     <div className="relative z-10 space-y-3">
@@ -197,7 +200,7 @@ export const CTASection: React.FC<SectionProps> = ({ data, pageNumber }) => {
 
                 {/* LOGO WATERMARK */}
                 <div className="absolute -bottom-16 -left-16 opacity-[0.015] pointer-events-none select-none rotate-12 scale-110">
-                    <img src="/images/logo.png" className="w-[500px] h-auto" alt="Watermark" />
+                    <img src="/images/logo.png" crossOrigin="anonymous" className="w-[500px] h-auto" alt="Watermark" />
                 </div>
             </div>
         </PageWrapper>

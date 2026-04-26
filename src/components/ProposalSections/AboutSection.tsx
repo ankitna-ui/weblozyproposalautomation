@@ -69,8 +69,6 @@ export const AboutSection: React.FC<SectionProps> = React.memo(({ data, pageNumb
                             alt="Agency"
                             crossOrigin="anonymous"
                             className="w-full h-full object-cover"
-                            loading="lazy"
-                            decoding="async"
                             onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/weblozy-team/800/600"; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D]/60 to-transparent" />

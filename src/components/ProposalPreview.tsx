@@ -135,14 +135,28 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
+      const waitForImages = async (element: HTMLElement) => {
+        const images = Array.from(element.querySelectorAll('img'));
+        await Promise.all(images.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }));
+        // Extra tick for browser paint
+        await new Promise(r => setTimeout(r, 200));
+      };
+
       // Process in small batches for stability + speed
-      const BATCH_SIZE = 3;
+      const BATCH_SIZE = 1;
       for (let i = 0; i < pagesElements.length; i += BATCH_SIZE) {
         const batch = pagesElements.slice(i, i + BATCH_SIZE);
-        setExportStatus(`Turbo Capture: Batch ${Math.floor(i/BATCH_SIZE) + 1}...`);
+        setExportStatus(`Pixel-Perfect Capture: Page ${i + 1}...`);
         
         const batchResults = await Promise.all(batch.map(async (pageEl) => {
           const el = pageEl as HTMLElement;
+          await waitForImages(el);
           const pageRect = el.getBoundingClientRect();
           
           // Detect links for this page
@@ -159,12 +173,22 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
             } : null;
           }).filter(Boolean);
 
+          // Balanced delay for asset readiness and export speed
+          await new Promise(r => setTimeout(r, 100));
+
           const imgData = await toJpeg(el, {
-            quality: 0.90,
-            pixelRatio: 1.8, // Optimized for Instant Download
-            backgroundColor: '#ffffff',
-            cacheBust: false,
-            style: { transform: 'scale(1)', margin: '0', boxShadow: 'none', borderRadius: '0' }
+            quality: 0.95, // Premium quality
+            pixelRatio: 2.5, // High resolution (Retina-grade)
+            cacheBust: true,
+            useCORS: true,
+            style: { 
+              transform: 'scale(1)', 
+              margin: '0', 
+              boxShadow: 'none', 
+              borderRadius: '0',
+              width: '794px', 
+              height: '1123px'
+            }
           });
 
           return { imgData, links };
@@ -173,6 +197,7 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
         batchResults.forEach((result, batchIdx) => {
           const globalIdx = i + batchIdx;
           if (globalIdx > 0) pdf.addPage();
+          // Use 'FAST' compression to keep file size within the requested 2-10MB range
           pdf.addImage(result.imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
           
           result.links?.forEach((link: any) => {
