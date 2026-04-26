@@ -180,7 +180,6 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
             quality: 0.95, // Premium quality
             pixelRatio: 2.5, // High resolution (Retina-grade)
             cacheBust: true,
-            useCORS: true,
             style: { 
               transform: 'scale(1)', 
               margin: '0', 
