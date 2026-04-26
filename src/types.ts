@@ -33,6 +33,7 @@ export interface PaymentTerm {
   id: string;
   label: string;
   percentage: number;
+  features?: string[];
 }
 
 export interface ProposalData {
@@ -81,6 +82,18 @@ export interface ProposalData {
   aboutManifesto: string;
   aboutImageTitle: string;
   aboutImageSubtitle: string;
+  contactEmail: string;
+  contactPhone1: string;
+  contactPhone2: string;
+  contactWebsite: string;
+  contactAddress: string;
+  socialInstagram: string;
+  socialLinkedin: string;
+  socialFacebook: string;
+  socialYoutube: string;
+  flowchartDemoLink: string;
+  coverLogoUrl: string;
+  companyTagline: string;
 }
 
 export const DEFAULT_PROPOSAL: ProposalData = {
@@ -117,11 +130,11 @@ export const DEFAULT_PROPOSAL: ProposalData = {
   futureExpansion: [],
   taxRate: 18,
   paymentTerms: [
-    { id: '1', label: 'Commencement Advance', percentage: 50 },
-    { id: '2', label: 'Progress Milestone', percentage: 30 },
-    { id: '3', label: 'Final Delivery', percentage: 20 }
+    { id: '1', label: 'Commencement Advance', percentage: 50, features: ['Strategic Planning', 'Architecture Setup', 'Resource Allocation'] },
+    { id: '2', label: 'Progress Milestone', percentage: 30, features: ['Core Module Development', 'Beta Testing', 'UI/UX Finalization'] },
+    { id: '3', label: 'Final Delivery', percentage: 20, features: ['UAT & Deployment', 'Training & Documentation', 'Global Launch'] }
   ],
-  flowchartImage: "https://picsum.photos/seed/weblozy-flow/1200/800",
+  flowchartImage: "https://media.istockphoto.com/id/1650117768/vector/thin-line-black-camera-logo-like-upload-your-photo-graphic-art-design-element-isolated-on.jpg?s=612x612&w=0&k=20&c=UzYU29nhSCA4Ik9sEORBZy9Sie0muH8k3MmUopfIqeo=",
   selectedPages: ['cover', 'about', 'problem', 'flowchart', 'modules', 'expansion', 'pricing', 'portfolio', 'terms', 'cta'],
   theme: {
     primaryColor: "#1AA3D9",
@@ -150,7 +163,19 @@ export const DEFAULT_PROPOSAL: ProposalData = {
   aboutQuote: "We have completely mastered the art of digital technology.",
   aboutManifesto: "Are you ready to break free from the monochrome monotony of traditional tech solutions? Welcome to Weblozy. Where your business isn’t just optimized – it’s immortalized.",
   aboutImageTitle: "Innovation Hub.",
-  aboutImageSubtitle: "Global Delivery HQ"
+  aboutImageSubtitle: "Global Delivery HQ",
+  contactEmail: "info@weblozy.com",
+  contactPhone1: "+91 96678 96604",
+  contactPhone2: "+1 320 433 0111",
+  contactWebsite: "www.weblozy.com",
+  contactAddress: "Weblozy HQ, New Delhi, India",
+  socialInstagram: "https://www.instagram.com/weblozy/",
+  socialLinkedin: "https://www.linkedin.com/company/weblozy/",
+  socialFacebook: "https://www.facebook.com/weblozy",
+  socialYoutube: "https://www.youtube.com/@weblozy",
+  flowchartDemoLink: "https://weblozy.com/demo",
+  coverLogoUrl: "/images/banner_image.png",
+  companyTagline: "SOLUTIONS • GLOBAL OPERATIONS"
 };
 
 export const AVAILABLE_MODULES: Module[] = [];

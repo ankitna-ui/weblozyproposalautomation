@@ -1,82 +1,116 @@
-import React from 'react';
-import { ProposalData, AVAILABLE_MODULES } from '../types';
-import {
-  CoverPage, AboutSection, ProblemSection,
-  FlowchartSection, ModulesSection,
-  PricingSection, PortfolioSection, TermsSection, CTASection,
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ProposalData, PAGES } from '../types';
+import { jsPDF } from 'jspdf';
+import { toJpeg } from 'html-to-image';
+import { 
+  Orbit, 
+  Download, 
+  ArrowLeft, 
+  ZoomIn, 
+  ZoomOut, 
+  Maximize2, 
+  Minimize2, 
+  Share2, 
+  Printer, 
+  Edit3,
+  FileText,
+  Loader2,
+  Monitor,
+  Layers,
+  Layout,
+  ChevronRight
+} from 'lucide-react';
+import { cn } from '../lib/utils';
+
+// Import All Sections
+import { 
+  CoverPage, 
+  AboutSection, 
+  ProblemSection, 
+  FlowchartSection, 
+  ModulesSection, 
+  PricingSection, 
+  PortfolioSection, 
+  TermsSection, 
+  CTASection,
   FutureExpansionSection
 } from './ProposalSections';
-import { toJpeg } from 'html-to-image';
-import jsPDF from 'jspdf';
-import { motion, AnimatePresence } from 'motion/react';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
-import { saveAs } from 'file-saver';
-import { Download, Edit3, Eye, Share2, FileText, File as FileIcon, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '../lib/utils';
 
 interface ProposalPreviewProps {
   data: ProposalData;
   onEdit: () => void;
+  onToggleEditor?: () => void;
+  isEditorOpen?: boolean;
 }
 
-export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit }) => {
-  const previewRef = React.useRef<HTMLDivElement>(null);
-  const [isExporting, setIsExporting] = React.useState(false);
-  const [exportProgress, setExportProgress] = React.useState(0);
-  const [exportStatus, setExportStatus] = React.useState('');
-  const [showFormatPortal, setShowFormatPortal] = React.useState(false);
+export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, onToggleEditor, isEditorOpen }) => {
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState('');
+  const [exportProgress, setExportProgress] = useState(0);
+  const [activeTab, setActiveTab] = useState('all');
+  const [showFormatPortal, setShowFormatPortal] = useState(false);
+  const [zoom, setZoom] = useState(0.85);
 
-  // Helper to calculate total pages and specific page numbers
-  const getPages = () => {
-    const pages: { id: string, props: any }[] = [];
-    let currentPage = 1;
-
-    // Calculate dynamic pricing to determine if pricing section should be visible
-    const modulesMap = new Map();
-    AVAILABLE_MODULES.forEach(m => modulesMap.set(m.id, m));
-    data.customModules.forEach(m => modulesMap.set(m.id, m));
-    const selectedModules = data.selectedModules.map(id => modulesMap.get(id)).filter(Boolean);
-
-    const modulesTotal = selectedModules.reduce((acc, m) => {
-      const featuresPrice = m.features.reduce((fAcc, f: any) => f.isSelected ? fAcc + (f.price || 0) : fAcc, 0);
-      return acc + m.price + featuresPrice;
-    }, 0);
-    const subtotal = data.basePrice + modulesTotal;
-    const discountAmount = data.discountType === 'percent' ? (subtotal * data.discount / 100) : data.discount;
-    const finalPrice = subtotal - discountAmount - data.additionalDiscount;
-
-    data.selectedPages.forEach((pageId) => {
-      // Hide pricing section if no amount is added (finalPrice <= 0)
-      if (pageId === 'pricing' && finalPrice <= 0) return;
-
-      if (pageId === 'modules') {
-        let numBatches = 0;
-        let currentBatchWeight = 0;
-        const PAGE_HEIGHT_LIMIT = 800;
-
-        selectedModules.forEach((module) => {
-          const selectedFeaturesCount = module.features.filter((f: any) => f.isSelected).length;
-          // Rule: If > 10 features, take half a page (2 per page). If <= 10, take 1/3 of a page (3 per page).
-          const moduleWeight = selectedFeaturesCount > 10 ? 401 : 266;
-
-          if (currentBatchWeight + moduleWeight > PAGE_HEIGHT_LIMIT && currentBatchWeight > 0) {
-            numBatches++;
-            currentBatchWeight = moduleWeight;
-          } else {
-            currentBatchWeight += moduleWeight;
-            if (numBatches === 0) numBatches = 1;
-          }
-        });
-
-        if (selectedModules.length === 0) numBatches = 1;
-
-        pages.push({ id: pageId, props: { data, pageNumber: currentPage } });
-        currentPage += numBatches;
+  // Adaptive Zoom for Mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setZoom(0.4);
+      } else if (window.innerWidth < 1024) {
+        setZoom(0.6);
       } else {
-        pages.push({ id: pageId, props: { data, pageNumber: currentPage } });
-        currentPage++;
+        setZoom(0.8);
       }
-    });
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Auto-scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const getPages = () => {
+    const pages = [];
+    let pageCount = 1;
+
+    if (data.selectedPages.includes('cover')) {
+      pages.push({ id: 'cover', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('about')) {
+      pages.push({ id: 'about', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('problem')) {
+      pages.push({ id: 'problem', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('flowchart')) {
+      pages.push({ id: 'flowchart', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('modules')) {
+      pages.push({ id: 'modules', props: { data, pageNumber: pageCount } });
+      const modulesCount = data.selectedModules.length;
+      pageCount += Math.ceil(modulesCount / 3);
+    }
+    if (data.selectedPages.includes('expansion')) {
+      pages.push({ id: 'expansion', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('pricing')) {
+      pages.push({ id: 'pricing', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('portfolio')) {
+      pages.push({ id: 'portfolio', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('terms')) {
+      pages.push({ id: 'terms', props: { data, pageNumber: pageCount++ } });
+    }
+    if (data.selectedPages.includes('cta')) {
+      pages.push({ id: 'cta', props: { data, pageNumber: pageCount++ } });
+    }
+
     return pages;
   };
 
@@ -88,125 +122,74 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit }
       setShowFormatPortal(false);
       setIsExporting(true);
       setExportProgress(10);
-      setExportStatus('Initializing High-Res Raster...');
+      setExportStatus('Launching Turbo Export...');
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pagesElements = previewRef.current.querySelectorAll('.proposal-page');
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+
+      const pagesElements = Array.from(previewRef.current.querySelectorAll('.proposal-page'));
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      for (let i = 0; i < pagesElements.length; i++) {
-        const pageEl = pagesElements[i] as HTMLElement;
-        setExportProgress(Math.floor(10 + (i / pagesElements.length) * 80));
-        setExportStatus(`Processing Module ${i + 1} of ${pagesElements.length}...`);
+      // Process in small batches for stability + speed
+      const BATCH_SIZE = 3;
+      for (let i = 0; i < pagesElements.length; i += BATCH_SIZE) {
+        const batch = pagesElements.slice(i, i + BATCH_SIZE);
+        setExportStatus(`Turbo Capture: Batch ${Math.floor(i/BATCH_SIZE) + 1}...`);
+        
+        const batchResults = await Promise.all(batch.map(async (pageEl) => {
+          const el = pageEl as HTMLElement;
+          const pageRect = el.getBoundingClientRect();
+          
+          // Detect links for this page
+          const linkElements = el.querySelectorAll('a');
+          const links = Array.from(linkElements).map(a => {
+            const rect = a.getBoundingClientRect();
+            const url = a.getAttribute('href');
+            return (url && (url.startsWith('http') || url.startsWith('mailto:') || url.startsWith('tel:'))) ? {
+              x: ((rect.left - pageRect.left) / pageRect.width) * pdfWidth,
+              y: ((rect.top - pageRect.top) / pageRect.height) * pdfHeight,
+              w: (rect.width / pageRect.width) * pdfWidth,
+              h: (rect.height / pageRect.height) * pdfHeight,
+              url: url
+            } : null;
+          }).filter(Boolean);
 
-        // Capture Logo Link Position if available
-        const logoEl = pageEl.querySelector('img[alt="Weblozy"]');
-        let logoLink = null;
-        if (logoEl) {
-          const rect = logoEl.getBoundingClientRect();
-          const pageRect = pageEl.getBoundingClientRect();
-          logoLink = {
-            x: ((rect.left - pageRect.left) / pageRect.width) * pdfWidth,
-            y: ((rect.top - pageRect.top) / pageRect.height) * pdfHeight,
-            w: (rect.width / pageRect.width) * pdfWidth,
-            h: (rect.height / pageRect.height) * pdfHeight
-          };
-        }
+          const imgData = await toJpeg(el, {
+            quality: 0.90,
+            pixelRatio: 1.8, // Optimized for Instant Download
+            backgroundColor: '#ffffff',
+            cacheBust: false,
+            style: { transform: 'scale(1)', margin: '0', boxShadow: 'none', borderRadius: '0' }
+          });
 
-        // Optimized Jpeg capture for significantly lower file size (MB reduction)
-        const imgData = await toJpeg(pageEl, {
-          quality: 0.85,
-          pixelRatio: 2.5, // Balanced for sharp text but lower weight
-          backgroundColor: '#ffffff',
-          style: {
-            transform: 'scale(1)',
-            margin: '0',
-            boxShadow: 'none'
-          }
+          return { imgData, links };
+        }));
+
+        batchResults.forEach((result, batchIdx) => {
+          const globalIdx = i + batchIdx;
+          if (globalIdx > 0) pdf.addPage();
+          pdf.addImage(result.imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+          
+          result.links?.forEach((link: any) => {
+            pdf.link(link.x, link.y, link.w, link.h, { url: link.url });
+          });
+          
+          setExportProgress(Math.floor(((globalIdx + 1) / pagesElements.length) * 95));
         });
-
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-
-        // Re-inject clickable link for logo
-        if (logoLink) {
-          pdf.link(logoLink.x, logoLink.y, logoLink.w, logoLink.h, { url: 'https://www.weblozy.com' });
-        }
       }
 
-      setExportProgress(95);
-      setExportStatus('Finalizing Document Metadata...');
-
-      const fileName = `${data.clientName.replace(/\s+/g, '_')}_${data.leadId.replace(/#/g, '')}_Proposal.pdf`;
-      pdf.save(fileName);
       setExportProgress(100);
-      setExportStatus('Success! Download Commenced.');
-      setTimeout(() => setIsExporting(false), 2000);
-    } catch (error) {
-      console.error('PDF Export failed:', error);
-      setExportStatus('Export Interrupted. Checking buffer...');
+      pdf.save(`${data.clientName.replace(/\s+/g, '_')}_Proposal.pdf`);
+      setTimeout(() => setIsExporting(false), 1000);
+    } catch (error: any) {
+      console.error('Turbo Export failed:', error);
+      setExportStatus('Export Interrupted');
       setTimeout(() => setIsExporting(false), 3000);
-    }
-  };
-
-  const exportWord = async () => {
-    setShowFormatPortal(false);
-    setIsExporting(true);
-    setExportProgress(20);
-    setExportStatus('Constructing Word XML Structure...');
-
-    try {
-      const modulesMap = new Map();
-      AVAILABLE_MODULES.forEach(m => modulesMap.set(m.id, m));
-      data.customModules.forEach(m => modulesMap.set(m.id, m));
-      const selectedModules = data.selectedModules.map(id => modulesMap.get(id)).filter(Boolean);
-
-      const doc = new Document({
-        sections: [{
-          properties: {},
-          children: [
-            new Paragraph({
-              text: `PROPOSAL: ${data.proposalPurpose}`,
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: "Client: ", bold: true }),
-                new TextRun(data.clientName),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: "Lead ID: ", bold: true }),
-                new TextRun(data.leadId),
-              ],
-            }),
-            new Paragraph({ text: "Strategic Capable Overview", heading: HeadingLevel.HEADING_2 }),
-            new Paragraph({ text: data.problem }),
-
-            new Paragraph({ text: "Proposed Solution Architecture", heading: HeadingLevel.HEADING_2 }),
-            ...selectedModules.flatMap(m => [
-              new Paragraph({ text: m.name, heading: HeadingLevel.HEADING_3, spacing: { before: 200 } }),
-              ...m.features.filter((f: any) => f.isSelected).map(f => new Paragraph({ text: `• ${f.text}`, bullet: { level: 0 } }))
-            ])
-          ],
-        }],
-      });
-
-      setExportProgress(70);
-      setExportStatus('Finalizing DOCX Packaging...');
-
-      const blob = await Packer.toBlob(doc);
-      const fileName = `${data.clientName.replace(/\s+/g, '_')}_${data.leadId.replace(/#/g, '')}_Proposal.docx`;
-      saveAs(blob, fileName);
-      setExportProgress(100);
-      setExportStatus('Success! Word Document Ready.');
-      setTimeout(() => setIsExporting(false), 2000);
-    } catch (err) {
-      console.error("Word export error:", err);
-      setIsExporting(false);
     }
   };
 
@@ -217,180 +200,191 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit }
       case 'problem': return <ProblemSection key={id} {...props} />;
       case 'flowchart': return <FlowchartSection key={id} {...props} />;
       case 'modules': return <ModulesSection key={id} {...props} />;
+      case 'expansion': return <FutureExpansionSection key={id} {...props} />;
       case 'pricing': return <PricingSection key={id} {...props} />;
       case 'portfolio': return <PortfolioSection key={id} {...props} />;
       case 'terms': return <TermsSection key={id} {...props} />;
       case 'cta': return <CTASection key={id} {...props} />;
-      case 'expansion': return <FutureExpansionSection key={id} {...props} />;
       default: return null;
     }
   };
 
   return (
-    <div className="flex-1 h-screen bg-[#F8F9FA] overflow-y-auto relative custom-scrollbar">
-      {/* Toolbar */}
-      <div className="sticky top-0 z-40 w-full bg-white/80 backdrop-blur-md border-b border-[#E5E7EB] px-8 py-4 flex justify-between items-center shadow-sm">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2.5 px-3 py-1.5 bg-[#1AA3D910] rounded-full border border-[#1AA3D920]">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#1AA3D9] animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#1AA3D9]">Live Blueprint</span>
-          </div>
-          <p className="text-[11px] text-[#6B7280] font-black uppercase tracking-tighter">
-            PROPOSAL FOR <span className="text-[#0D0D0D]">{data.clientName}</span> &bull; {pages.length} PAGES
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
+    <div className="h-screen bg-[#F8FAFC] flex flex-col relative overflow-hidden">
+      {/* 1. TOP UTILITY BAR (Sticky) */}
+      <div className="sticky top-0 w-full h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 z-[60] px-4 md:px-8 flex items-center justify-between shadow-sm shrink-0">
+        <div className="flex items-center gap-3 md:gap-6">
+          <button 
             onClick={onEdit}
-            className="px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest text-[#0D0D0D] border border-[#E5E7EB] hover:bg-white hover:border-[#0D0D0D] transition-all"
+            className="group flex items-center gap-3 text-slate-500 hover:text-slate-900 transition-all font-black uppercase tracking-widest text-[9px] md:text-xs"
           >
-            Configure
+            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-slate-100 transition-all">
+              <ArrowLeft className="w-4 h-4" />
+            </div>
+            <span className="hidden sm:inline">Exit</span>
           </button>
-          <div className="relative">
-            <button
-              onClick={() => setShowFormatPortal(!showFormatPortal)}
-              disabled={isExporting}
-              className="flex items-center gap-2.5 px-6 py-2 rounded-xl bg-[#0D0D0D] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[#1AA3D9] transition-all disabled:opacity-50 shadow-premium"
-            >
-              <Download className="w-4 h-4" />
-              Generate Proposal
-            </button>
+          
+          <div className="h-6 w-px bg-slate-200" />
 
-            {/* FORMAT SELECTION PORTAL */}
-            <AnimatePresence>
-              {showFormatPortal && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-[60]"
-                >
-                  <button
-                    onClick={exportPDF}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group text-left"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FileIcon className="w-4 h-4 text-red-500" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-slate-900">Adobe PDF</p>
-                      <p className="text-[8px] font-bold text-slate-400">High-Res & Ultra Lite</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={exportWord}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group text-left"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FileText className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-slate-900">MS Word</p>
-                      <p className="text-[8px] font-bold text-slate-400">Editable Structure</p>
-                    </div>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {onToggleEditor && (
+             <button 
+                onClick={onToggleEditor}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                  isEditorOpen ? "bg-slate-900 text-white shadow-lg" : "bg-slate-100 text-slate-900 hover:bg-slate-200"
+                )}
+             >
+                <Layout className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{isEditorOpen ? "Hide Panel" : "Edit Details"}</span>
+                <span className="sm:hidden">{isEditorOpen ? "Hide" : "Edit"}</span>
+             </button>
+          )}
+
+          <div className="hidden md:block h-6 w-px bg-slate-200" />
+          <div className="truncate max-w-[80px] sm:max-w-none">
+            <h2 className="text-xs md:text-sm font-black text-slate-900 uppercase tracking-tighter leading-none truncate">{data.clientName}</h2>
+            <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">{data.leadId}</p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="hidden xl:flex items-center bg-slate-100 rounded-2xl p-1 mr-4">
+            <button 
+              onClick={() => setActiveTab('all')}
+              className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'all' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+            >Full View</button>
+            <button 
+              onClick={() => setActiveTab('focus')}
+              className={cn("px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", activeTab === 'focus' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700")}
+            >Focus</button>
+          </div>
+
+          <div className="flex items-center gap-1 md:gap-2">
+            <button 
+              onClick={() => setZoom(Math.max(0.4, zoom - 0.1))}
+              className="p-1.5 md:p-2.5 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"
+            ><Minimize2 className="w-3.5 h-3.5 md:w-4 h-4" /></button>
+            <span className="text-[8px] md:text-[10px] font-black text-slate-400 w-8 md:w-12 text-center">{Math.round(zoom * 100)}%</span>
+            <button 
+              onClick={() => setZoom(Math.min(1.2, zoom + 0.1))}
+              className="p-1.5 md:p-2.5 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"
+            ><Maximize2 className="w-3.5 h-3.5 md:w-4 h-4" /></button>
+          </div>
+
+          <button 
+            onClick={exportPDF}
+            disabled={isExporting}
+            className="md:ml-4 px-4 md:px-8 py-2 md:py-3 bg-[#0D0D0D] text-white rounded-xl md:rounded-2xl font-black uppercase tracking-widest text-[9px] md:text-xs flex items-center gap-2 md:gap-3 hover:shadow-premium transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {isExporting ? <Loader2 className="w-3 h-3 md:w-4 h-4 animate-spin" /> : <Download className="w-3 h-3 md:w-4 h-4" />}
+            <span className="hidden sm:inline">Generate</span>
+            <span className="sm:hidden">PDF</span>
+          </button>
         </div>
       </div>
 
-      {/* GLOBAL ANIMATED EXPORT OVERLAY */}
+      {/* 2. EXPORT PROGRESS PORTAL */}
       <AnimatePresence>
         {isExporting && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-6"
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] w-full max-w-md"
           >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl p-10 text-center space-y-8"
-            >
-              <div className="relative w-32 h-32 mx-auto">
-                {/* Circular Progress Path */}
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="58"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    className="text-slate-100"
-                  />
-                  <motion.circle
-                    cx="64"
-                    cy="64"
-                    r="58"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="transparent"
-                    strokeDasharray="364.42"
-                    initial={{ strokeDashoffset: 364.42 }}
-                    animate={{ strokeDashoffset: 364.42 - (364.42 * exportProgress) / 100 }}
-                    className="text-[#1AA3D9]"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-black text-slate-900 leading-none">{exportProgress}%</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Preparing Strategy Asset</h3>
-                <p className="text-[10px] font-black text-[#1AA3D9] uppercase tracking-[0.2em] animate-pulse">{exportStatus}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-                  <CheckCircle2 className={cn("w-4 h-4", exportProgress > 30 ? "text-[#98BF45]" : "text-slate-200")} />
-                  <span className="text-[9px] font-black uppercase text-slate-400">Rasterizing Visuals</span>
-                </div>
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-                  <CheckCircle2 className={cn("w-4 h-4", exportProgress > 80 ? "text-[#98BF45]" : "text-slate-200")} />
-                  <span className="text-[9px] font-black uppercase text-slate-400">Embedding Links</span>
-                </div>
-              </div>
-
-              {exportProgress === 100 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="pt-4"
-                >
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest leading-none">
-                    <CheckCircle2 className="w-3 h-3 text-[#98BF45]" />
-                    Asset Dispatched
+            <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl border border-white/10 mx-4">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#1AA3D910] flex items-center justify-center">
+                    <Orbit className="w-4 h-4 text-[#1AA3D9]" />
                   </div>
-                </motion.div>
-              )}
-            </motion.div>
+                  <div>
+                    <h1 className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none mb-1">Proposal Intelligence</h1>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Drafting Protocol v2.0</p>
+                  </div>
+                </div>
+                <span className="text-xl font-black text-white">{exportProgress}%</span>
+              </div>
+              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-gradient-to-r from-[#1AA3D9] to-[#98BF45]" 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${exportProgress}%` }}
+                />
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Document Container */}
-      <div className="py-12 px-6 flex flex-col items-center gap-8 min-w-[max-content]">
-        <div ref={previewRef} className="flex flex-col items-center">
-          <AnimatePresence mode="popLayout">
+      {/* 3. MAIN PREVIEW CANVAS */}
+      <div className="flex-1 overflow-y-auto no-scrollbar pt-12 pb-40 px-4 flex flex-col items-center">
+        <div 
+          ref={previewRef}
+          style={{ 
+            transform: `scale(${zoom})`,
+            transformOrigin: 'top center',
+            transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}
+          className="flex flex-col items-center"
+        >
+          <div className="relative">
             {pages.map((page, index) => (
               <motion.div
-                key={`${page.id}-${page.props.pageNumber}`}
-                initial={{ opacity: 0, y: 20 }}
+                key={`${page.id}-${index}`}
+                initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="print:m-0 print:shadow-none"
+                transition={{ delay: index * 0.1 }}
               >
                 {renderSection(page.id, page.props)}
               </motion.div>
             ))}
-          </AnimatePresence>
+          </div>
         </div>
+      </div>
+
+      {/* 4. FLOATING FORMAT TOGGLE */}
+      <div className="fixed bottom-12 right-12 z-[50]">
+        <button 
+          onClick={() => setShowFormatPortal(!showFormatPortal)}
+          className="w-16 h-16 bg-white rounded-full shadow-2xl flex items-center justify-center border border-slate-100 hover:scale-110 active:scale-95 transition-all text-slate-900 relative group"
+        >
+          <Layout className="w-6 h-6" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#1AA3D9] rounded-full border-2 border-white" />
+        </button>
+
+        <AnimatePresence>
+          {showFormatPortal && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: -80 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              className="absolute bottom-0 right-0 w-64 bg-white rounded-[2rem] shadow-2xl border border-slate-100 p-6"
+            >
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Export Protocol</p>
+              <div className="space-y-2">
+                <button 
+                  onClick={exportPDF}
+                  className="w-full p-4 rounded-2xl hover:bg-slate-50 flex items-center justify-between group transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-4 h-4 text-[#1AA3D9]" />
+                    <span className="text-xs font-black text-slate-900 uppercase">PDF High-Res</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <div className="h-px bg-slate-50 mx-2" />
+                <button className="w-full p-4 rounded-2xl opacity-40 cursor-not-allowed flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Printer className="w-4 h-4 text-slate-400" />
+                    <span className="text-xs font-black text-slate-400 uppercase">Word Doc</span>
+                  </div>
+                  <Orbit className="w-4 h-4 text-slate-200" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

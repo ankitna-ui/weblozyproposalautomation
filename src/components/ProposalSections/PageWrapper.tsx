@@ -14,7 +14,7 @@ export const PageWrapper: React.FC<{
     hideFooter?: boolean;
     className?: string
 }> = ({ children, pageNumber, data, hideFooter, className }) => (
-    <div className={cn("a4-page proposal-page shadow-2xl mb-12 first:mt-8 last:mb-20 rounded-md overflow-hidden relative bg-white", className)}>
+    <div className={cn("a4-page proposal-page shadow-2xl mb-12 first:mt-8 last:mb-20 rounded-md overflow-hidden relative", !className?.includes('bg-') && "bg-white", className)}>
         {/* Page Borders/Accents */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-slate-100/50 opacity-50" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-transparent to-slate-100/50 opacity-50" />
@@ -31,6 +31,7 @@ export const PageWrapper: React.FC<{
                             <img
                                 src="/images/banner_image.png"
                                 alt="Weblozy"
+                                crossOrigin="anonymous"
                                 className="h-8 w-auto"
                                 onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/weblozy/100/50"; }}
                             />

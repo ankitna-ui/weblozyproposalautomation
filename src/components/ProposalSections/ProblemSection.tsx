@@ -73,8 +73,9 @@ export const ProblemSection: React.FC<SectionProps> = ({ data, pageNumber }) => 
                                 <img
                                     src="/images/image2.jpg"
                                     alt="Cloud Technology"
+                                    crossOrigin="anonymous"
                                     className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
-                                    onerror={(e: any) => { e.target.src = "https://picsum.photos/seed/cloud/800/600"; }}
+                                    onError={(e: any) => { e.target.src = "https://picsum.photos/seed/cloud/800/600"; }}
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D90] to-transparent opacity-60" />
                             </div>
@@ -106,22 +107,32 @@ export const ProblemSection: React.FC<SectionProps> = ({ data, pageNumber }) => 
                         `}</style>
 
                         {/* Value Proposition Box */}
-                        <div className="bg-[#0D0D0D] text-white p-6 rounded-[2.5rem] flex-1 space-y-4 border border-white/5 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-[#98BF4510] rounded-full blur-2xl" />
-                            <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#98BF45] px-1">Why Partner With Weblozy?</h3>
-                            <div className="space-y-3">
+                        <div className="bg-[#0D0D0D] text-white p-4 rounded-[2rem] flex-1 space-y-2.5 border border-white/5 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-20 h-20 bg-[#98BF4510] rounded-full blur-2xl" />
+                            <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-[#98BF45] px-1">Why Partner With Weblozy?</h3>
+                            <div className="space-y-2">
                                 {[
                                     "Forward-thinking experts in cloud tech",
                                     "Customized solutions for your business",
                                     "Premier security & data protection",
                                     "Continuous 24/7 technical support",
-                                    "Agile systems that scale with growth"
+                                    "Agile systems that scale with growth",
+                                    "Master-grade strategic automation",
+                                    "Neural-driven business intelligence",
+                                    "Seamless ecosystem integration",
+                                    "Future-proof architecture protocol",
+                                    "Quantum-secured data encryption",
+                                    "End-to-end operational visibility",
+                                    "Hyper-personalized user experiences",
+                                    "Agile-first development methodology",
+                                    "Global delivery excellence & standards",
+                                    "Dedicated strategic account management"
                                 ].map((item, i) => (
-                                    <div key={i} className="flex gap-3 items-start group">
+                                    <div key={i} className="flex gap-2 items-start group">
                                         <div className="mt-0.5 shrink-0">
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-[#98BF45]" />
+                                            <CheckCircle2 className="w-3 h-3 text-[#98BF45]" />
                                         </div>
-                                        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-300 leading-tight group-hover:text-white transition-colors">{item}</p>
+                                        <p className="text-[8.5px] font-bold uppercase tracking-wider text-slate-300 leading-none group-hover:text-white transition-colors">{item}</p>
                                     </div>
                                 ))}
                             </div>

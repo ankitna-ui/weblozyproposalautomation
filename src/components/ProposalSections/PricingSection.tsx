@@ -2,7 +2,7 @@ import React from 'react';
 import { PageWrapper, SectionProps, formatPrice } from './PageWrapper';
 import { motion } from 'motion/react';
 import { cn } from '../../lib/utils';
-import { Clock, ShieldCheck, Wallet, Receipt, Tag, FileText, Sparkles, TrendingUp, Target, Activity, Zap, CreditCard, Banknote } from 'lucide-react';
+import { Clock, ShieldCheck, Wallet, Receipt, Tag, FileText, Orbit, TrendingUp, Target, Activity, Zap, CreditCard, Banknote } from 'lucide-react';
 import { AVAILABLE_MODULES } from '../../types';
 
 export const PricingSection: React.FC<SectionProps> = ({ data, pageNumber }) => {
@@ -13,201 +13,213 @@ export const PricingSection: React.FC<SectionProps> = ({ data, pageNumber }) => 
 
     const selectedModules = data.selectedModules.map(id => modulesMap.get(id)).filter(Boolean);
     const modulesPrice = selectedModules.reduce((acc, m) => {
-        const featuresPrice = m.features.reduce((fAcc: number, f: any) => f.isSelected ? fAcc + (f.price || 0) : fAcc, 0);
+        const featuresPrice = (m.features || []).reduce((fAcc: number, f: any) => f.isSelected ? fAcc + (f.price || 0) : fAcc, 0);
         return acc + m.price + featuresPrice;
     }, 0);
 
-    const grossBase = data.basePrice + modulesPrice;
+    const subtotal = data.basePrice + modulesPrice;
     const discountAmount = data.discountType === 'percent'
-        ? (grossBase * data.discount / 100)
+        ? (subtotal * data.discount / 100)
         : data.discount;
-    const totalDiscount = discountAmount + (data.additionalDiscount || 0);
+    const totalSavings = discountAmount + (data.additionalDiscount || 0);
 
-    const netInvestment = grossBase - totalDiscount;
+    const netInvestment = subtotal - totalSavings;
     const taxAmount = (netInvestment * data.taxRate) / 100;
-    const grandTotal = netInvestment + taxAmount;
+    // User wants to show price after discount but with a GST included note, 
+    // and specifically says "gst include krke price nhi ayega" in the total.
+    const grandTotal = netInvestment; // Use net investment as the final display total
 
     const termCount = data.paymentTerms.length;
 
-    // DYNAMIC FISCAL YEAR CALCULATION
+    // Fiscal Year Calculation
     const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth();
-    const fyStart = currentMonth >= 3 ? currentYear : currentYear - 1;
-    const fyEnd = fyStart + 1;
-    const dynamicFY = `FY ${fyStart}-${fyEnd.toString().slice(-2)}`;
-
-    // DENSITY-AWARE LAYOUT ENGINE (Strict for A4)
-    const rowCount = Math.ceil(termCount / 3);
-    const isHeavy = rowCount >= 3;
-    const isVeryHeavy = rowCount >= 4;
-    const isVeryLight = termCount <= 3;
+    const dynamicFY = `FY ${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
 
     return (
-        <PageWrapper data={data} pageNumber={pageNumber}>
-            {/* Master Executive Container */}
-            <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
-
-                {/* 1. HEADER - BASIS 8% */}
-                <div className="basis-[8%] shrink-0 flex justify-between items-end border-b-2 border-slate-900 pb-3">
-                    <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                            <div className="h-4 w-1 bg-[#1AA3D9]" />
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Fiscal Section 07</span>
+        <PageWrapper data={data} pageNumber={pageNumber} hideFooter={true}>
+            <div className="flex flex-col h-full relative overflow-hidden font-sans">
+                
+                {/* --- 1. FISCAL HEADER --- */}
+                <div className="flex justify-between items-end pb-4 border-b border-slate-200 shrink-0">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="w-1.5 h-4 bg-[#1AA3D9]" />
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em]">Section 07 // Financials</span>
                         </div>
-                        <h2 className="font-black text-[#0D0D0D] tracking-tight leading-none uppercase text-4xl">Project Investment.</h2>
+                        <h2 className="text-4xl font-black text-[#0D0D0D] tracking-tighter uppercase italic">Project Investment.</h2>
                     </div>
-                    <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl shrink-0">
-                        <Clock className="w-3.5 h-3.5 text-[#1AA3D9]" />
-                        <span className="font-black uppercase leading-none text-[9px] tracking-tight">
-                            {data.estimatedDays} Standard Cycle
-                        </span>
-                    </div>
-                </div>
-
-                {/* 2. PRIMARY DASHBOARD - BASIS 25% (Controlled) */}
-                <div className={cn(
-                    "shrink-0 flex items-stretch gap-4 mt-6",
-                    isHeavy ? "basis-[22%]" : "basis-[25%]"
-                )}>
-                    <div className={cn(
-                        "flex-1 relative bg-[#0D0D0D] rounded-[2rem] text-white shadow-xl overflow-hidden flex flex-col justify-center border border-white/5",
-                        isHeavy ? "p-6" : "p-8"
-                    )}>
-                        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(26,163,217,0.05),transparent_70%)]" />
-
-                        {(data.discount > 0 || data.additionalDiscount > 0) && (
-                            <div className="absolute top-6 right-6">
-                                <div className="bg-[#98BF45] text-white px-3 py-1 rounded-full flex items-center gap-2 shadow-lg">
-                                    <Sparkles className="w-3 h-3" />
-                                    <span className="text-[8px] font-black uppercase tracking-widest leading-none">
-                                        STRATEGIC REBATE APPLIED
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-2">
-                                <Wallet className="w-3.5 h-3.5 text-[#1AA3D9]" />
-                                <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] leading-none">Investment Valuation</span>
-                            </div>
-
-                            <div className="flex items-baseline gap-4 mb-6">
-                                <h3 className={cn(
-                                    "font-black tracking-tighter leading-none transition-all",
-                                    isHeavy ? "text-6xl" : "text-7xl"
-                                )}>
-                                    {formatPrice(netInvestment, data.currency)}
-                                </h3>
-                                <div className="text-left border-l-2 border-[#98BF45] pl-4 py-1">
-                                    <p className="text-[9px] font-black text-[#98BF45] uppercase tracking-widest leading-none mb-0.5">Net Allocation</p>
-                                    <p className="text-[5px] font-bold text-white/20 uppercase tracking-widest leading-none">Enterprise Standards</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-auto grid grid-cols-2 gap-6 pt-4 border-t border-white/10">
-                                <div>
-                                    <p className="text-white/30 text-[7px] font-black uppercase tracking-widest leading-none mb-1">Gross Valuation</p>
-                                    <p className="text-base font-black tracking-tight">{formatPrice(grossBase, data.currency)}</p>
-                                </div>
-                                <div className="text-right border-l border-white/10 pl-6">
-                                    <p className="text-[#1AA3D9] text-[7px] font-black uppercase tracking-widest leading-none mb-1">GST ({data.taxRate}%)</p>
-                                    <p className="text-base font-black text-[#1AA3D9] tracking-tight">{formatPrice(taxAmount, data.currency)}</p>
-                                </div>
-                            </div>
+                    <div className="text-right">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 rounded-lg mb-1">
+                            <Zap className="w-3 h-3 text-[#1AA3D9]" />
+                            <span className="text-[8px] font-black text-white uppercase tracking-widest">Optimized ROI Protocol</span>
                         </div>
-                    </div>
-
-                    <div className="w-[25%] flex flex-col gap-3">
-                        <div className="bg-slate-50 border border-slate-100 rounded-[1.5rem] flex-1 flex flex-col justify-center items-center p-3 text-center">
-                            <Activity className="w-4 h-4 text-[#1AA3D9] mb-1.5" />
-                            <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest">PERFORMANCE</h4>
-                        </div>
-                        <div className="bg-slate-900 border border-white/5 rounded-[1.5rem] flex-1 flex flex-col justify-center items-center p-3 text-center text-white">
-                            <ShieldCheck className="w-4 h-4 text-[#98BF45] mb-1.5" />
-                            <h4 className="text-[8px] font-black uppercase tracking-widest text-[#98BF45]">VERIFIED</h4>
-                        </div>
+                        <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">{dynamicFY} Settlement Matrix</p>
                     </div>
                 </div>
 
-                {/* 3. AUDIT TRANSCRIPT - BASIS 8% */}
-                <div className="basis-[8%] shrink-0 flex items-center bg-white border border-slate-100 rounded-xl shadow-inner px-8 mt-4 min-h-0">
-                    <div className="grid grid-cols-4 w-full gap-6 divide-x divide-slate-100 py-3">
-                        {[
-                            { label: 'Baseline', val: formatPrice(grossBase, data.currency) },
-                            { label: 'Savings', val: `- ${formatPrice(totalDiscount, data.currency)}`, color: 'text-[#98BF45]' },
-                            { label: `Prov. Tax`, val: `+ ${formatPrice(taxAmount, data.currency)}`, color: 'text-[#1AA3D9]' },
-                            { label: 'Final Total', val: formatPrice(grandTotal, data.currency), weight: 'font-black' }
-                        ].map((item, i) => (
-                            <div key={i} className={cn("flex flex-col justify-center", i > 0 && "pl-6")}>
-                                <p className="text-[7px] font-black text-slate-400 tracking-[0.1em] uppercase leading-none mb-1 truncate">{item.label}</p>
-                                <p className={cn("text-base font-bold leading-none truncate", item.color, item.weight)}>{item.val}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* 4. PAYMENT ROADMAP - FLEX-1 (Auto-Density Fitting) */}
-                <div className="flex-1 min-h-0 flex flex-col mt-4 overflow-hidden">
-                    <div className="flex justify-between items-center px-4 mb-3 shrink-0">
-                        <div className="flex items-center gap-2">
-                            <div className="h-3.5 w-1 bg-slate-900" />
-                            <span className="text-[9px] font-black text-slate-900 uppercase tracking-[0.3em] leading-none">Disbursement milestones</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#98BF45]/40" />
-                            <span className="text-[7px] font-black text-[#98BF45] uppercase tracking-widest leading-none">Account Integrity: 100% Verified</span>
-                        </div>
-                    </div>
-
-                    <div className={cn(
-                        "grid grid-cols-3 flex-1 min-h-0 content-start overflow-hidden",
-                        isVeryHeavy ? "gap-2 pb-1" : isHeavy ? "gap-3 pb-2" : "gap-4 pb-4"
-                    )}>
-                        {data.paymentTerms.map((term, index) => {
-                            const milestoneAmount = (term.percentage / 100) * grandTotal;
-                            return (
-                                <div
-                                    key={term.id}
-                                    className={cn(
-                                        "bg-white border border-slate-100 rounded-[1.5rem] flex flex-col relative overflow-hidden shadow-sm flex-1 min-h-0",
-                                        isVeryHeavy ? "p-3" : isHeavy ? "p-4" : "p-6"
-                                    )}
-                                >
-                                    {/* Small Index Marker */}
-                                    <div className="absolute top-0 right-0 py-1 px-2.5 bg-slate-50 text-slate-300 font-extrabold text-[10px] leading-none rounded-bl-lg border-l border-b border-slate-100">
-                                        M0{index + 1}
-                                    </div>
-
-                                    <div className="flex flex-col h-full gap-2 relative z-10 min-h-0">
-                                        <div className="shrink-0">
-                                            <span className="font-black text-slate-400 uppercase tracking-widest truncate text-[7px] block mb-0.5">
-                                                {term.label}
+                {/* --- 2. MAIN ACCOUNTING DASHBOARD --- */}
+                <div className="grid grid-cols-12 gap-6 pt-8 shrink-0">
+                    
+                    {/* LEFT: Cost Breakdown Audit */}
+                    <div className="col-span-7 space-y-4">
+                        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1AA3D9] to-transparent" />
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Core Valuation</span>
+                                    <span className="text-sm font-black text-slate-900">{formatPrice(subtotal, data.currency)}</span>
+                                </div>
+                                
+                                {totalSavings > 0 && (
+                                    <div className="flex justify-between items-center group">
+                                        <div className="flex items-center gap-2">
+                                            <Tag className="w-3 h-3 text-[#98BF45]" />
+                                            <span className="text-[10px] font-black text-[#98BF45] uppercase tracking-widest">
+                                                {data.discountType === 'percent' ? `${data.discount}% ` : ''} 
+                                                Strategic Discount
+                                                {data.additionalDiscount > 0 ? ' + Additional Rebate' : ''}
                                             </span>
                                         </div>
+                                        <span className="text-sm font-black text-[#98BF45] italic">-{formatPrice(totalSavings, data.currency)}</span>
+                                    </div>
+                                )}
 
-                                        <div className="flex items-baseline gap-1 shrink-0">
+                                <div className="h-px bg-slate-200" />
+
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Net Investment</span>
+                                    <span className="text-lg font-black text-slate-900 tracking-tight">{formatPrice(netInvestment, data.currency)}</span>
+                                </div>
+
+                                <div className="flex justify-between items-center">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Tax Provision ({data.taxRate}%)</span>
+                                    <span className="text-[13px] font-bold text-slate-500">+{formatPrice(taxAmount, data.currency)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Fiscal Note */}
+                        <div className="flex items-start gap-4 p-5 border border-dashed border-slate-200 rounded-3xl">
+                            <Receipt className="w-4 h-4 text-[#1AA3D9] shrink-0 mt-0.5" />
+                            <p className="text-[9px] font-bold text-slate-400 uppercase leading-relaxed tracking-wide">
+                                All values are in <span className="text-slate-900 font-black">{data.currency}</span>. 
+                                The pricing reflects our master-grade service commitment and is valid for 30 business days from the date of issuance.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* RIGHT: GRAND TOTAL PLATE */}
+                    <div className="col-span-5">
+                        <div className="h-full bg-[#0D0D0D] rounded-[2rem] p-6 text-white flex flex-col justify-between relative overflow-hidden group border border-white/5 shadow-2xl">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-[#1AA3D910] rounded-full blur-3xl" />
+                            <div className="absolute bottom-0 left-0 w-full h-[30%] bg-gradient-to-t from-black to-transparent opacity-30" />
+                            
+                            <div className="relative z-10 flex flex-col items-center text-center gap-4">
+                                {/* Label */}
+                                <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.4em]">Final Commitment</p>
+                                
+                                {/* Price */}
+                                <h3 className="text-4xl font-black tracking-tighter leading-none italic">
+                                    {formatPrice(grandTotal, data.currency)}
+                                </h3>
+
+                                {/* Discount Badge */}
+                                <div className="px-4 py-1.5 bg-[#98BF45] rounded-full shadow-[0_0_20px_rgba(152,191,69,0.4)] animate-pulse">
+                                    <span className="text-[10px] font-black text-white uppercase italic">
+                                        {data.discountType === 'percent' ? `${data.discount}%` : formatPrice(totalSavings, data.currency)} Off
+                                    </span>
+                                </div>
+
+                                {/* GST Note */}
+                                <div className="px-3 py-1 bg-white/10 rounded-lg border border-white/10">
+                                    <span className="text-[8px] font-black uppercase text-white/60">+ {data.taxRate}% GST extra as applicable</span>
+                                </div>
+
+                                <p className="text-[7px] font-bold text-white/20 uppercase tracking-widest italic">
+                                    * Limited time strategic valuation
+                                </p>
+                            </div>
+
+                            {/* Bottom Badges */}
+                            <div className="relative z-10 pt-4 mt-2 border-t border-white/10 space-y-2.5">
+                                <div className="flex items-center justify-center gap-2.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#98BF45]" />
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-white/50">Verified Settlement Protocol</p>
+                                </div>
+                                <div className="flex items-center justify-center gap-2.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#1AA3D9]" />
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-white/50">Quantum Accounting Integrity</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* --- 3. MILESTONE ROADMAP --- */}
+                <div className="flex-grow flex flex-col mt-6 min-h-0">
+                    <div className="flex justify-between items-center mb-3 shrink-0 px-2">
+                        <div className="flex items-center gap-3">
+                            <CreditCard className="w-4 h-4 text-[#0D0D0D]" />
+                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.3em]">Disbursement Milestones</span>
+                        </div>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">{termCount} Phases Defined</span>
+                    </div>
+
+                    <div className={cn(
+                        "grid gap-3 flex-grow overflow-hidden content-start pb-4",
+                        termCount <= 3 ? "grid-cols-3" : termCount === 4 ? "grid-cols-4" : "grid-cols-3"
+                    )}>
+                        {data.paymentTerms.map((term, index) => {
+                            const isCompact = termCount > 3;
+                            return (
+                                <div key={term.id} className={cn(
+                                    "bg-white border border-slate-100 rounded-2xl flex flex-col relative overflow-hidden shadow-sm group hover:border-[#1AA3D930] transition-colors",
+                                    isCompact ? "p-2.5 gap-1.5" : "p-3.5 gap-2.5"
+                                )}>
+                                    <div className="absolute top-0 right-0 w-8 h-8 bg-slate-50 flex items-center justify-center border-l border-b border-slate-100">
+                                        <span className="text-[8px] font-black text-slate-300">M0{index + 1}</span>
+                                    </div>
+                                    
+                                    <div className="shrink-0">
+                                        <p className={cn(
+                                            "font-black text-slate-400 uppercase tracking-widest truncate pr-6",
+                                            isCompact ? "text-[7px] mb-0.5" : "text-[8px] mb-1"
+                                        )}>{term.label}</p>
+                                        <div className="flex items-baseline gap-1">
                                             <span className={cn(
-                                                "font-black text-[#0D0D0D] tracking-tighter leading-none",
-                                                isVeryHeavy ? "text-2xl" : isHeavy ? "text-3xl" : "text-5xl"
+                                                "font-black text-slate-900 tracking-tighter leading-none",
+                                                isCompact ? "text-xl" : "text-2xl"
                                             )}>{term.percentage}</span>
-                                            <span className={cn("font-black text-[#1AA3D9] leading-none", isVeryHeavy ? "text-xs" : "text-base")}>%</span>
+                                            <span className="text-[10px] font-black text-[#1AA3D9]">%</span>
                                         </div>
+                                    </div>
 
-                                        {/* COMPACT VALUATION BOX */}
+                                    {/* Milestone Deliverables */}
+                                    <div className="flex-grow min-h-0 overflow-hidden">
                                         <div className={cn(
-                                            "mt-auto shrink-0 bg-slate-50 rounded-xl border border-slate-100 transition-all",
-                                            isVeryHeavy ? "p-1.5" : "p-2.5"
+                                            "flex flex-wrap gap-1 content-start overflow-hidden",
+                                            isCompact ? "max-h-[30px]" : "max-h-[40px]"
                                         )}>
-                                            <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Payable Amount</p>
-                                            <p className={cn("font-bold text-[#0D0D0D] tracking-tight leading-none truncate", isVeryHeavy ? "text-[11px]" : isHeavy ? "text-sm" : "text-base")}>
-                                                {formatPrice(milestoneAmount, data.currency)}
-                                            </p>
+                                            {(term.features || []).map((feature, fIdx) => (
+                                                <div key={fIdx} className="px-1.5 py-0.5 bg-slate-50 border border-slate-100 rounded-md">
+                                                    <p className="text-[6px] font-bold text-slate-500 uppercase tracking-tighter truncate max-w-[60px]">
+                                                        {feature}
+                                                    </p>
+                                                </div>
+                                            ))}
                                         </div>
+                                    </div>
 
-                                        {/* Slim Progress Bar */}
-                                        <div className="shrink-0 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                                            <div className="h-full bg-gradient-to-r from-[#1AA3D9] to-[#98BF45]" style={{ width: `${term.percentage}%` }} />
+                                    <div className={cn(
+                                        "mt-auto border-t border-slate-50 space-y-1.5",
+                                        isCompact ? "pt-1.5" : "pt-2.5"
+                                    )}>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest italic">Phase Allocation</span>
+                                            <span className="text-[10px] font-black text-[#1AA3D9]">{term.percentage}%</span>
+                                        </div>
+                                        <div className="h-0.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                            <div className="h-full bg-[#1AA3D9]" style={{ width: `${term.percentage}%` }} />
                                         </div>
                                     </div>
                                 </div>
@@ -216,28 +228,36 @@ export const PricingSection: React.FC<SectionProps> = ({ data, pageNumber }) => 
                     </div>
                 </div>
 
-                {/* 5. SLIM EXECUTIVE FOOTER - BASIS 10% */}
-                <div className="basis-[10%] shrink-0 mt-3 bg-[#0D0D0D] text-white rounded-[1.5rem] flex items-center justify-between px-8 border border-white/10 shadow-2xl relative overflow-hidden min-h-0">
-                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#1AA3D930] to-transparent opacity-50" />
-
-                    <div className="flex items-center gap-6 relative z-10 py-2">
-                        <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center shrink-0">
-                            <Banknote className="w-5 h-5 text-[#98BF45]" />
+                {/* --- 4. EXECUTIVE FOOTER --- */}
+                <div className="mt-auto pt-6 border-t border-slate-200 flex justify-between items-center shrink-0">
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-slate-900 uppercase italic">Settlement Agreement</span>
+                            <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Authorized Verification Required</span>
                         </div>
-                        <div className="space-y-0.5 min-w-0">
-                            <p className="font-black uppercase tracking-[0.2em] leading-none text-[9px] truncate text-[#1AA3D9]">Fiscal Settlement Protocol</p>
-                            <p className="text-white/20 font-bold uppercase leading-none text-[7px] max-w-[400px] truncate">
-                                NEFT/RTGS Disbursement Required. Total: <span className="text-white/40">{formatPrice(grandTotal, data.currency)}</span>.
-                            </p>
+                        <div className="h-8 w-px bg-slate-200" />
+                        <div className="flex items-center gap-3">
+                            <ShieldCheck className="w-4 h-4 text-[#98BF45]" />
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Master-Grade Financial Integrity Guaranteed</p>
                         </div>
                     </div>
+                </div>
 
-                    <div className="text-right pl-6 border-l border-white/10 shrink-0 relative z-10 flex flex-col justify-center h-full gap-0.5 py-2">
-                        <div className="flex items-center justify-end gap-1.5 text-[7px] font-black text-[#1AA3D9] uppercase tracking-widest leading-none mb-0.5">
-                            <Zap className="w-3 h-3" />
-                            <span>Weblozy Standard</span>
-                        </div>
-                        <p className="font-black tracking-widest leading-none text-2xl">{dynamicFY}</p>
+                {/* --- 5. GLOBAL BRANDING --- */}
+                <div className="pt-6 flex justify-between items-center shrink-0">
+                    <div className="flex items-center gap-4">
+                        <img
+                            src="/images/banner_image.png"
+                            alt="Weblozy"
+                            className="h-7 w-auto"
+                        />
+                        <div className="h-4 w-px bg-slate-200" />
+                        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">
+                            Weblozy &bull; Confidential &copy; {new Date().getFullYear()}
+                        </p>
+                    </div>
+                    <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
+                        SOLUTIONS • GLOBAL OPERATIONS
                     </div>
                 </div>
             </div>

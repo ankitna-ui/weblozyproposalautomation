@@ -2,11 +2,11 @@ import React from 'react';
 import { Globe, Monitor, Zap, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import { PageWrapper, SectionProps } from './PageWrapper';
 
-export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) => {
+export const PortfolioSection: React.FC<SectionProps> = React.memo(({ data, pageNumber }) => {
     return (
         <PageWrapper data={data} pageNumber={pageNumber}>
             <div className="flex flex-col h-full min-h-0 overflow-hidden relative">
-                {/* 1. ULTRA-PREMIUM HEADER (Compressed for A4) */}
+                {/* ... existing code ... */}
                 <div className="basis-[8%] shrink-0 flex justify-between items-end border-b border-slate-100 pb-3">
                     <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
@@ -24,7 +24,6 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                     </div>
                 </div>
 
-                {/* 2. SUBTLE NAVIGATION BAR (Compressed) */}
                 <div className="basis-[4%] shrink-0 flex items-center justify-center border-b border-slate-50 overflow-hidden">
                     <div className="flex gap-10 font-black text-[8px] text-slate-300 uppercase tracking-[0.2em]">
                         <span>Identity</span>
@@ -33,7 +32,6 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                     </div>
                 </div>
 
-                {/* 3. OPTIMIZED GALLERY GRID (2x2) - Tightened Gap */}
                 <div className="flex-1 min-h-0 grid grid-cols-2 gap-x-8 gap-y-8 py-6 overflow-hidden">
                     {data.portfolio.slice(0, 4).map((project, i) => {
                         const encodedUrl = encodeURIComponent(project.url);
@@ -42,9 +40,7 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
 
                         return (
                             <div key={project.id} className="flex flex-col h-full min-h-0 group">
-                                {/* Browser Mockup Container - Locked Aspect Ratio */}
-                                <div className="aspect-[16/10] relative bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm flex flex-col shrink-0">
-                                    {/* Minimal Header */}
+                                <div className="aspect-[16/10] relative bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden shadow-sm flex flex-col shrink-0 animate-pulse-subtle">
                                     <div className="h-7 bg-slate-50/50 border-b border-slate-100 flex items-center px-5 justify-between shrink-0">
                                         <div className="flex gap-1">
                                             <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
@@ -57,12 +53,14 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                                         </div>
                                     </div>
 
-                                    {/* Preview Body */}
                                     <div className="flex-1 relative overflow-hidden bg-slate-50">
                                         <img
                                             src={previewUrl}
                                             alt={project.name}
+                                            crossOrigin="anonymous"
                                             className="w-full h-full object-cover transition-all duration-1000"
+                                            loading="lazy"
+                                            decoding="async"
                                             onError={(e) => {
                                                 const img = e.target as HTMLImageElement;
                                                 if (img.src === previewUrl) {
@@ -79,8 +77,7 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Metadata Hub - Re-calibrated Spacing */}
+                                {/* ... metadata hub ... */}
                                 <div className="mt-3 space-y-2 shrink-0">
                                     <div className="flex justify-between items-center">
                                         <div className="space-y-0.5">
@@ -92,7 +89,6 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                                         </div>
                                     </div>
 
-                                    {/* URL Container - Compact */}
                                     <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 flex flex-col gap-1 transition-all group-hover:bg-white group-hover:border-[#1AA3D920]">
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-0.5 h-2 bg-[#98BF45] rounded-full" />
@@ -113,7 +109,6 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                     })}
                 </div>
 
-                {/* 4. FOOTER STATUS BAR (Compressed) */}
                 <div className="basis-[8%] shrink-0 mt-2 bg-[#0D0D0D] text-white rounded-[1.5rem] flex items-center justify-between px-10 relative overflow-hidden shadow-lg">
                     <div className="absolute inset-0 bg-gradient-to-r from-[#1AA3D910] to-transparent" />
                     <div className="flex items-center gap-6 relative z-10">
@@ -131,4 +126,4 @@ export const PortfolioSection: React.FC<SectionProps> = ({ data, pageNumber }) =
             </div>
         </PageWrapper>
     );
-};
+});

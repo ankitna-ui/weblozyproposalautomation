@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, ExternalLink } from 'lucide-react';
 import { PageWrapper, SectionProps } from './PageWrapper';
 
-export const FlowchartSection: React.FC<SectionProps> = ({ data, pageNumber }) => {
+export const FlowchartSection: React.FC<SectionProps> = React.memo(({ data, pageNumber }) => {
     const [processedImage, setProcessedImage] = useState<string>(data.flowchartImage || "");
 
     useEffect(() => {
@@ -53,7 +53,20 @@ export const FlowchartSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                 <div className="flex justify-between items-end">
                     <div>
                         <span className="text-[9px] font-black uppercase tracking-[0.4em] text-[#1AA3D9] mb-2 block">{data.flowchartSubtitle}</span>
-                        <h2 className="text-5xl font-black text-[#0D0D0D] tracking-tighter leading-none uppercase">{data.flowchartTitle}</h2>
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-5xl font-black text-[#0D0D0D] tracking-tighter leading-none uppercase">{data.flowchartTitle}</h2>
+                            {data.flowchartDemoLink && (
+                                <a 
+                                    href={data.flowchartDemoLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-[#1AA3D9] transition-all shadow-lg"
+                                >
+                                    <ExternalLink className="w-3 h-3" />
+                                    View Live Demo
+                                </a>
+                            )}
+                        </div>
                     </div>
                     <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest max-w-[150px] text-right italic">{data.flowchartNote}</p>
                 </div>
@@ -64,8 +77,9 @@ export const FlowchartSection: React.FC<SectionProps> = ({ data, pageNumber }) =
                     {/* Dynamic Flex-Scale Image Hub */}
                     <div className="flex-1 min-h-0 relative flex items-center justify-center overflow-hidden bg-[radial-gradient(#e5e7eb_0.5px,transparent_0.5px)] [background-size:15px:15px]">
                         <img
-                            src={processedImage || "https://picsum.photos/seed/weblozy-flow/1200/800"}
+                            src={processedImage || "https://media.istockphoto.com/id/1650117768/vector/thin-line-black-camera-logo-like-upload-your-photo-graphic-art-design-element-isolated-on.jpg?s=612x612&w=0&k=20&c=UzYU29nhSCA4Ik9sEORBZy9Sie0muH8k3MmUopfIqeo="}
                             alt="Flowchart Architecture"
+                            crossOrigin="anonymous"
                             className="w-full h-full object-contain p-4"
                         />
                     </div>
@@ -102,4 +116,4 @@ export const FlowchartSection: React.FC<SectionProps> = ({ data, pageNumber }) =
             </div>
         </PageWrapper>
     );
-};
+});

@@ -83,7 +83,9 @@ export const TermsSection: React.FC<SectionProps> = ({ data, pageNumber }) => {
                             <img
                                 src="/images/image4.jpg"
                                 alt="Automation Transformation Concept"
+                                crossOrigin="anonymous"
                                 className="w-full h-full object-cover"
+                                onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/automation/800/600"; }}
                             />
 
                             {/* Overlay Plate (Compressed) */}

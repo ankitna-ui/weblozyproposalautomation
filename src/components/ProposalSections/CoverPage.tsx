@@ -27,10 +27,11 @@ export const CoverPage: React.FC<SectionProps> = ({ data, pageNumber }) => {
                 {/* Top Bar: Primary Identity - Compressed Padding */}
                 <div className="w-full pt-12 px-12 pb-8 flex justify-between items-start shrink-0 relative z-10">
                     <div className="flex flex-col gap-6">
-                        <a href="https://www.weblozy.com" target="_blank" rel="noopener noreferrer" className="transition-opacity hover:opacity-80">
+                        <a href={`https://${data.contactWebsite}`} target="_blank" rel="noopener noreferrer" className="transition-opacity hover:opacity-80">
                             <img
-                                src="/images/banner_image.png"
-                                alt="Weblozy"
+                                src={data.coverLogoUrl}
+                                alt={data.companyName}
+                                crossOrigin="anonymous"
                                 className="h-16 w-auto object-contain"
                                 onError={(e: any) => { e.target.src = "https://drive.google.com/uc?id=1yA2uJ5i3yUJirKxQ6ydTzrq_JIIpd-1B"; }}
                             />
@@ -39,10 +40,10 @@ export const CoverPage: React.FC<SectionProps> = ({ data, pageNumber }) => {
                     </div>
                     <div className="text-right flex flex-col items-end">
                         <div className="flex flex-col items-end group">
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.5em] leading-none mb-2 pr-1">{data.documentRefLabel || 'Document Reference'}</p>
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.5em] leading-none mb-2 pr-1">{data.documentRefLabel}</p>
                             <div className="px-5 py-2.5 bg-white border-2 border-[#0D0D0D] rounded-xl flex items-center gap-3 shadow-sm group-hover:shadow-md transition-all duration-300">
                                 <div className="w-2 h-2 rounded-full bg-[#98BF45]" />
-                                <p className="text-sm font-black text-[#0D0D0D] tracking-[0.1em] leading-none uppercase">{data.leadId || 'REF-2024-000'}</p>
+                                <p className="text-sm font-black text-[#0D0D0D] tracking-[0.1em] leading-none uppercase">{data.leadId}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-1.5 mt-3">
@@ -56,7 +57,7 @@ export const CoverPage: React.FC<SectionProps> = ({ data, pageNumber }) => {
                 <div className="flex-1 flex flex-col justify-center px-12 relative z-10 py-8">
                     <div className="max-w-4xl space-y-8">
                         <div className="space-y-3">
-                            <p className="text-[11px] font-black text-[#1AA3D9] uppercase tracking-[0.7em]">{data.frameworkLabel || 'Executive Framework'}</p>
+                            <p className="text-[11px] font-black text-[#1AA3D9] uppercase tracking-[0.7em]">{data.frameworkLabel}</p>
                             <h1 className={cn(
                                 "font-black text-[#0D0D0D] tracking-[-0.04em] uppercase transition-all duration-500",
                                 getTitleFontSize(purpose)
@@ -73,7 +74,7 @@ export const CoverPage: React.FC<SectionProps> = ({ data, pageNumber }) => {
                         <div className="flex items-center gap-6">
                             <div className="w-20 h-0.5 bg-slate-200" />
                             <p className="text-[11px] text-slate-500 font-bold uppercase tracking-[0.3em] leading-relaxed whitespace-pre-line">
-                                {data.roadmapDescription || "Bespoke Technical & \nOperational Roadmap"}
+                                {data.roadmapDescription}
                             </p>
                         </div>
                     </div>
@@ -103,7 +104,7 @@ export const CoverPage: React.FC<SectionProps> = ({ data, pageNumber }) => {
                                 <div className="space-y-2">
                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Release Protocol</p>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {(data.proposalStatus || "CONFIDENTIAL, STABLE-V2").split(',').map((status, idx) => (
+                                        {(data.proposalStatus || "").split(',').map((status, idx) => (
                                             <div key={idx} className={cn(
                                                 "px-1.5 py-0.5 rounded text-[8px] font-black uppercase",
                                                 idx === 0 ? "bg-slate-100 text-slate-600" : "bg-[#98BF4510] text-[#98BF45]"
@@ -124,8 +125,8 @@ export const CoverPage: React.FC<SectionProps> = ({ data, pageNumber }) => {
                     </div>
 
                     <div className="mt-8 flex justify-between items-center text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] pt-6 border-t border-slate-50">
-                        <p>© {new Date().getFullYear()} {data.companyName.toUpperCase()} SOLUTIONS • GLOBAL OPERATIONS</p>
-                        <a href="https://www.weblozy.com" target="_blank" rel="noopener noreferrer" className="text-[#1AA3D9] hover:underline underline-offset-4">WWW.WEBLOZY.COM</a>
+                        <p>© {new Date().getFullYear()} {data.companyName.toUpperCase()} {data.companyTagline}</p>
+                        <a href={`https://${data.contactWebsite}`} target="_blank" rel="noopener noreferrer" className="text-[#1AA3D9] hover:underline underline-offset-4">{data.contactWebsite.toUpperCase()}</a>
                     </div>
                 </div>
             </div>

@@ -40,7 +40,13 @@ export const FutureExpansionSection: React.FC<SectionProps> = ({ data, pageNumbe
                         >
                             {/* Card Header with Image Overlay */}
                             <div className="relative h-20 shrink-0">
-                                <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                <img 
+                                    src={item.image} 
+                                    alt="" 
+                                    crossOrigin="anonymous"
+                                    className="w-full h-full object-cover" 
+                                    onError={(e) => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${item.id}/800/600`; }}
+                                />
                                 <div className="absolute inset-0 bg-gradient-to-t from-slate-50 to-transparent" />
                                 <div className="absolute bottom-2 left-4">
                                     <span className="text-[8px] font-black uppercase tracking-widest text-[#1AA3D9] block mb-0.5">Phase 0{index + 1}</span>

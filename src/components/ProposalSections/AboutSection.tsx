@@ -1,11 +1,11 @@
 import React from 'react';
 import { PageWrapper, SectionProps } from './PageWrapper';
-import { CheckCircle2, Sparkles, Rocket, Zap, Shield, MousePointer2 } from 'lucide-react';
+import { CheckCircle2, Orbit, Rocket, Zap, Shield, MousePointer2 } from 'lucide-react';
 
-export const AboutSection: React.FC<SectionProps> = ({ data, pageNumber }) => (
+export const AboutSection: React.FC<SectionProps> = React.memo(({ data, pageNumber }) => (
     <PageWrapper data={data} pageNumber={pageNumber}>
         <div className="flex flex-col h-full gap-5 overflow-hidden">
-            {/* Header Area */}
+            {/* ... existing header code ... */}
             <div className="flex justify-between items-end relative shrink-0">
                 <div className="absolute -top-6 -left-6 w-32 h-32 bg-[#1AA3D910] rounded-full blur-3xl -z-10" />
                 <div>
@@ -39,7 +39,7 @@ export const AboutSection: React.FC<SectionProps> = ({ data, pageNumber }) => (
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Why Weblozy?</p>
                             </div>
                             {[
-                                { icon: <Sparkles className="w-4 h-4 text-[#1AA3D9]" />, text: 'Creatively Customized' },
+                                { icon: <Orbit className="w-4 h-4 text-[#1AA3D9]" />, text: 'Creatively Customized' },
                                 { icon: <Zap className="w-4 h-4 text-[#98BF45]" />, text: 'Reliably Responsive' },
                                 { icon: <Shield className="w-4 h-4 text-[#1AA3D9]" />, text: 'Effortlessly Efficient' },
                                 { icon: <Rocket className="w-4 h-4 text-[#98BF45]" />, text: 'Securely Streamlined' },
@@ -63,11 +63,14 @@ export const AboutSection: React.FC<SectionProps> = ({ data, pageNumber }) => (
 
                 {/* Right Column: Image & Services */}
                 <div className="col-span-5 flex flex-col gap-5 min-h-0">
-                    <div className="h-48 rounded-[3rem] overflow-hidden relative shadow-premium shrink-0 border-4 border-white">
+                    <div className="h-48 rounded-[3rem] overflow-hidden relative shadow-premium shrink-0 border-4 border-white bg-slate-50 animate-pulse-subtle">
                         <img
                             src="/images/image3.jpg"
                             alt="Agency"
+                            crossOrigin="anonymous"
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => { (e.target as HTMLImageElement).src = "https://picsum.photos/seed/weblozy-team/800/600"; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D]/60 to-transparent" />
@@ -76,7 +79,7 @@ export const AboutSection: React.FC<SectionProps> = ({ data, pageNumber }) => (
                             <p className="text-[8px] font-bold text-white/70 tracking-[0.3em] uppercase">{data.aboutImageSubtitle}</p>
                         </div>
                     </div>
-
+                    {/* ... rest of the file ... */}
                     <div className="flex-1 p-8 rounded-[2.5rem] border border-slate-100 bg-white flex flex-col min-h-0 overflow-hidden shadow-sm">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-5 shrink-0">Full-Stack Ecosystem</p>
                         <div className="grid grid-cols-1 gap-2.5 overflow-hidden">
@@ -94,7 +97,9 @@ export const AboutSection: React.FC<SectionProps> = ({ data, pageNumber }) => (
             {/* Bottom Callout */}
             <div className="p-6 bg-[#0D0D0D] rounded-[2rem] flex items-center justify-between shadow-2xl shrink-0 border border-white/5">
                 <div className="flex items-center gap-6">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-glow flex items-center justify-center text-sm">✨</div>
+                    <div className="w-10 h-10 rounded-full bg-white shadow-glow flex items-center justify-center">
+                        <Orbit className="w-5 h-5 text-slate-900" />
+                    </div>
                     <div className="max-w-[500px]">
                         <p className="text-[10px] text-white/40 font-black leading-tight uppercase tracking-widest mb-1">Weblozy Manifesto</p>
                         <p className="text-[10px] text-white/70 font-bold leading-relaxed uppercase">
@@ -109,4 +114,4 @@ export const AboutSection: React.FC<SectionProps> = ({ data, pageNumber }) => (
             </div>
         </div>
     </PageWrapper>
-);
+));

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Sparkles, Target, CheckCircle2, Shield, Zap, Box, ListChecks } from 'lucide-react';
+import { Settings, Orbit, Target, CheckCircle2, Shield, Zap, Box, ListChecks } from 'lucide-react';
 import { ProposalData, AVAILABLE_MODULES, Module } from '../../types';
 import { cn } from '../../lib/utils';
 import { getPasteColorFromString } from '../../lib/colors';
@@ -25,7 +25,7 @@ const getModuleInitials = (name: string) => {
         .toUpperCase();
 };
 
-export const ModulesSection: React.FC<SectionProps> = ({ data, pageNumber }) => {
+export const ModulesSection: React.FC<SectionProps> = React.memo(({ data, pageNumber }) => {
     const getSelectedModulesData = () => {
         const modulesMap = new Map<string, Module>();
         AVAILABLE_MODULES.forEach(m => modulesMap.set(m.id, m));
@@ -74,101 +74,101 @@ export const ModulesSection: React.FC<SectionProps> = ({ data, pageNumber }) => 
 
                 // Grid template changes based on valuation visibility
                 const gridTemplate = hasValuation
-                    ? "grid-cols-[100px_200px_1fr_150px]"
-                    : "grid-cols-[100px_200px_1fr]";
+                    ? "grid-cols-[80px_180px_1fr_140px]"
+                    : "grid-cols-[80px_180px_1fr]";
 
                 return (
                     <PageWrapper key={pageIdx} data={data} pageNumber={pageNumber ? pageNumber + pageIdx : undefined} className="bg-white">
                         <div className="flex flex-col h-full gap-6">
                             {/* 1. SECTION IDENTITY */}
-                            <div className="flex justify-between items-end border-b-2 border-slate-900 pb-6">
+                            <div className="flex justify-between items-end border-b-2 border-slate-900 pb-4">
                                 <div className="flex items-center gap-6">
-                                    <a
-                                        href="https://www.weblozy.com"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center p-3 relative group transition-all duration-500 hover:rotate-6 hover:scale-110 shadow-xl border-t border-white/20"
+                                    <div
+                                        className="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center p-3 shadow-xl border-t border-white/20"
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-[#1AA3D9]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
-                                        <img src="/images/logo.png" alt="Weblozy Logo" className="w-full h-full object-contain relative z-10 filter brightness-0 invert" />
-                                    </a>
+                                        <img 
+                                            src="/images/logo.png" 
+                                            alt="Weblozy Logo" 
+                                            className="w-full h-full object-contain filter brightness-0 invert" 
+                                        />
+                                    </div>
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] font-black uppercase tracking-[0.5em] text-[#1AA3D9]">Protocol Step // 03</span>
+                                            <span className="text-[9px] font-black uppercase tracking-[0.4em] text-[#1AA3D9]">Protocol // Node 03</span>
                                         </div>
-                                        <h1 className="text-5xl font-black text-[#0D0D0D] tracking-tighter leading-none uppercase">
-                                            Modules <span className="text-slate-300">Features.</span>
+                                        <h1 className="text-4xl font-black text-[#0D0D0D] tracking-tighter leading-none uppercase italic">
+                                            Project <span className="text-slate-300">Modules.</span>
                                         </h1>
                                     </div>
                                 </div>
                                 <div className="text-right flex flex-col items-end gap-1">
-                                    <div className="px-4 py-1.5 bg-[#1AA3D9] rounded-full">
-                                        <p className="text-[10px] font-black text-white uppercase tracking-widest whitespace-nowrap">
-                                            Batch {String(pageIdx + 1).padStart(2, '0')} / {String(pages.length).padStart(2, '0')}
+                                    <div className="px-3 py-1 bg-slate-100 rounded-lg border border-slate-200">
+                                        <p className="text-[8px] font-black text-slate-900 uppercase tracking-widest whitespace-nowrap">
+                                            Batch {pageIdx + 1} / {pages.length}
                                         </p>
                                     </div>
-                                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em]">Technical Delivery Framework</p>
                                 </div>
                             </div>
 
                             {/* 2. ENTERPRISE SPECIFICATION TABLE */}
-                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden mt-2">
-                                <div className="w-full flex-1 flex flex-col border-collapse">
+                            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                                <div className="w-full flex-1 flex flex-col">
                                     {/* Table Head */}
-                                    <div className={cn("grid bg-slate-900 text-white rounded-t-2xl overflow-hidden border border-slate-900", gridTemplate)}>
-                                        <div className="p-4 text-[10px] font-black uppercase tracking-[0.2em] border-r border-white/10 flex items-center justify-center">Ref ID</div>
-                                        <div className="p-4 text-[10px] font-black uppercase tracking-[0.2em] border-r border-white/10">Module Identity</div>
-                                        <div className="p-4 text-[10px] font-black uppercase tracking-[0.2em] border-r border-white/10">Technical Scope & Features</div>
+                                    <div className={cn("grid bg-slate-950 text-white rounded-t-2xl overflow-hidden", gridTemplate)}>
+                                        <div className="p-3 text-[9px] font-black uppercase tracking-[0.2em] border-r border-white/5 flex items-center justify-center">ID</div>
+                                        <div className="p-3 text-[9px] font-black uppercase tracking-[0.2em] border-r border-white/5">Module</div>
+                                        <div className="p-3 text-[9px] font-black uppercase tracking-[0.2em] border-r border-white/5">Technical Scope</div>
                                         {hasValuation && (
-                                            <div className="p-4 text-[10px] font-black uppercase tracking-[0.2em] text-right">Valuation</div>
+                                            <div className="p-3 text-[9px] font-black uppercase tracking-[0.2em] text-right pr-6">Valuation</div>
                                         )}
                                     </div>
 
-                                    {/* Table Body - Flex grow ensures it fills the page */}
-                                    <div className="flex-1 flex flex-col border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-premium">
+                                    {/* Table Body */}
+                                    <div className="flex-1 flex flex-col border-x border-b border-slate-200 rounded-b-2xl overflow-hidden shadow-sm">
                                         {pageModules.map((module, idx) => {
                                             const activeFeatures = module.features.filter(f => f.isSelected);
+                                            // Extreme density check
+                                            const itemFontSize = activeFeatures.length > 15 ? "text-[7px]" : fontSize;
+                                            
                                             return (
                                                 <div key={module.id}
                                                     className={cn(
-                                                        "grid flex-1 items-stretch border-b border-slate-100 last:border-0",
+                                                        "grid flex-1 items-stretch border-b border-slate-100 last:border-0 min-h-0 overflow-hidden",
                                                         gridTemplate
                                                     )}
-                                                    style={{ backgroundColor: `${module.color}08` }} // Subtle 3% module color tint
                                                 >
                                                     {/* Column 1: Ref ID */}
-                                                    <div className={cn(padding, "border-r border-slate-100 flex items-center justify-center")}>
-                                                        <div className="flex flex-col items-center">
-                                                            <span className="text-[9px] font-black text-slate-400 font-mono tracking-tighter bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-sm leading-none whitespace-nowrap">
-                                                                W-{getModuleInitials(module.name)}-{String(idx + 1 + (pageIdx * MODULES_PER_PAGE)).padStart(2, '0')}
-                                                            </span>
-                                                        </div>
+                                                    <div className={cn(padding, "border-r border-slate-50 flex items-center justify-center bg-slate-50/30")}>
+                                                        <span className="text-[8px] font-black text-slate-400 font-mono tracking-tighter">
+                                                            {getModuleInitials(module.name)}-{idx + 1}
+                                                        </span>
                                                     </div>
 
                                                     {/* Column 2: Identity */}
-                                                    <div className={cn(padding, "border-r border-slate-100 flex flex-col justify-center relative")}>
-                                                        {/* Immersive Vertical Accent */}
-                                                        <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: module.color }} />
-                                                        <div className="pl-2">
-                                                            <div className="flex items-center gap-2 mb-1.5">
-                                                                <Zap className="w-3 h-3" style={{ color: module.color }} />
-                                                                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">
-                                                                    {module.name}
-                                                                </h3>
+                                                    <div className={cn(padding, "border-r border-slate-50 flex flex-col justify-center relative bg-white")}>
+                                                        <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: module.color }} />
+                                                        <div className="pl-3">
+                                                            <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-tight leading-tight mb-1">
+                                                                {module.name}
+                                                            </h3>
+                                                            <div className="flex items-center gap-1">
+                                                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: module.color }} />
+                                                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Active Node</p>
                                                             </div>
-                                                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] opacity-80 leading-none">
-                                                                Enterprise Node
-                                                            </p>
                                                         </div>
                                                     </div>
 
                                                     {/* Column 3: Features */}
-                                                    <div className={cn(padding, "border-r border-slate-100 bg-white/40 flex items-center")}>
-                                                        <div className={cn("grid grid-cols-2 gap-x-8 w-full", gapY)}>
+                                                    <div className={cn(padding, "border-r border-slate-50 bg-white flex items-center min-h-0 overflow-hidden")}>
+                                                        <div className={cn(
+                                                            "grid gap-x-6 w-full h-full content-center", 
+                                                            activeFeatures.length > 10 ? "grid-cols-2" : "grid-cols-1",
+                                                            gapY
+                                                        )}>
                                                             {activeFeatures.map((feat, fidx) => (
-                                                                <div key={fidx} className="flex items-start gap-3 group min-w-0">
-                                                                    <div className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: module.color }} />
-                                                                    <span className={cn(fontSize, "font-bold text-slate-700 uppercase tracking-tight leading-tight break-words")}>
+                                                                <div key={fidx} className="flex items-start gap-2.5 min-w-0">
+                                                                    <CheckCircle2 className={cn("shrink-0 mt-0.5", iconSize)} style={{ color: module.color }} />
+                                                                    <span className={cn(itemFontSize, "font-bold text-slate-600 uppercase tracking-tight leading-snug")}>
                                                                         {feat.text}
                                                                     </span>
                                                                 </div>
@@ -236,4 +236,4 @@ export const ModulesSection: React.FC<SectionProps> = ({ data, pageNumber }) => 
             )}
         </div>
     );
-};
+});

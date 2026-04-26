@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Plus, Trash2, Edit3, Check, X, Loader2, DollarSign, CheckCircle2, Circle, ChevronUp, ChevronDown } from 'lucide-react';
+import { Orbit, Plus, Trash2, Edit3, Check, X, Loader2, DollarSign, CheckCircle2, Circle, ChevronUp, ChevronDown } from 'lucide-react';
 import { Module, ModuleFeature } from '../types';
 import { fetchModuleFeatures, suggestExtraFeatures, validateModuleName } from '../services/aiService';
 import { cn } from '../lib/utils';
@@ -145,44 +145,44 @@ export const ModuleDesigner: React.FC<ModuleDesignerProps> = ({ onSave, onClose,
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/20 backdrop-blur-md p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0, scale: 0.98, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]"
+        className="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[75vh]"
       >
-        <div className="p-8 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+        <div className="p-5 md:p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Design Module</h2>
-            <p className="text-sm text-slate-500 font-medium">Craft your custom module with AI precision.</p>
+            <h2 className="text-lg md:text-xl font-black text-slate-900 uppercase tracking-tighter">Design <span className="text-[#1AA3D9]">Module.</span></h2>
+            <p className="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">Strategic AI Feature Architect</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-            <X className="w-6 h-6 text-slate-400" />
+            <X className="w-5 h-5 text-slate-400" />
           </button>
         </div>
 
-        <div className="p-8 space-y-8 overflow-y-auto custom-scrollbar flex-1">
+        <div className="p-5 md:p-8 space-y-6 md:space-y-8 overflow-y-auto custom-scrollbar flex-1">
           {/* Module Name */}
           <div className="space-y-4">
             <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 block px-2">Module Identity</label>
             <div className="space-y-2">
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Lead Management System"
+                  placeholder="e.g., Enterprise Lead Management"
                   className={cn(
-                    "flex-1 px-6 py-4 rounded-2xl bg-slate-50 border transition-all outline-none font-bold text-slate-900 shadow-inner",
+                    "flex-1 px-5 py-3.5 rounded-xl bg-white border-2 transition-all outline-none font-bold text-slate-800",
                     validation?.isValid === false ? "border-red-200 focus:border-red-400" : "border-slate-100 focus:border-[#1AA3D9]"
                   )}
                 />
                 <button
                   onClick={handleFetchFeatures}
                   disabled={isLoading || !name.trim()}
-                  className="px-6 py-4 rounded-2xl bg-[#1AA3D9] text-white font-black uppercase tracking-widest text-xs flex items-center gap-2 disabled:opacity-50 hover:shadow-glow transition-all"
+                  className="px-6 py-3.5 rounded-xl bg-[#1AA3D9] text-white font-black uppercase tracking-widest text-[10px] flex items-center gap-2 disabled:opacity-50 hover:bg-[#1A5FA3] transition-all shadow-lg shadow-blue-500/20"
                 >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Orbit className="w-4 h-4" />}
                   Analyze
                 </button>
               </div>
@@ -196,7 +196,7 @@ export const ModuleDesigner: React.FC<ModuleDesignerProps> = ({ onSave, onClose,
 
               {aiError && (
                 <div className="px-4 py-2 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <Orbit className="w-3 h-3 text-amber-500" />
                   <p className="text-[10px] font-bold text-amber-600 uppercase tracking-tight">{aiError}</p>
                 </div>
               )}
@@ -227,35 +227,36 @@ export const ModuleDesigner: React.FC<ModuleDesignerProps> = ({ onSave, onClose,
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="e.g. Focus on high-frequency trading features, assume a distributed architecture, prioritize security..."
-              className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-[#1AA3D9] outline-none font-medium text-sm text-slate-700 shadow-inner h-24 resize-none"
+              placeholder="e.g. Focus on high-frequency trading, assume a distributed architecture..."
+              className="w-full px-5 py-3.5 rounded-xl bg-white border border-slate-100 focus:border-[#1AA3D9] outline-none font-medium text-sm text-slate-600 h-20 resize-none"
             />
-            <p className="text-[10px] text-slate-400 font-medium px-2 italic">Enter a custom prompt to influence how AI generates features.</p>
+            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest px-2 italic opacity-60">Influences AI feature generation logic</p>
           </div>
 
           {/* Module Appearance */}
           <div className="space-y-4">
             <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 block px-2">Visual Branding</label>
-            <div className="flex flex-wrap gap-3 px-2">
+            <div className="flex flex-wrap gap-4 px-2">
               {[
                 { name: 'Sky', hex: '#E0F2FE' },
                 { name: 'Emerald', hex: '#F0FDF4' },
-                { name: 'Orange', hex: '#FFF7ED' },
+                { name: 'Amber', hex: '#FFFBEB' },
                 { name: 'Violet', hex: '#F5F3FF' },
                 { name: 'Rose', hex: '#FFF1F2' },
-                { name: 'Amber', hex: '#FEF3C7' },
+                { name: 'Blue', hex: '#EFF6FF' },
                 { name: 'Slate', hex: '#F8FAFC' },
               ].map((c) => (
                 <button
                   key={c.hex}
                   onClick={() => setModuleColor(c.hex)}
                   className={cn(
-                    "w-10 h-10 rounded-xl border-2 transition-all",
-                    moduleColor === c.hex ? "border-slate-900 scale-110" : "border-transparent"
+                    "w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center",
+                    moduleColor === c.hex ? "border-[#1AA3D9] scale-110 shadow-lg shadow-blue-500/10" : "border-transparent"
                   )}
                   style={{ backgroundColor: c.hex }}
-                  title={c.name}
-                />
+                >
+                  {moduleColor === c.hex && <Check className="w-5 h-5 text-[#1AA3D9]" />}
+                </button>
               ))}
             </div>
           </div>
@@ -399,7 +400,7 @@ export const ModuleDesigner: React.FC<ModuleDesignerProps> = ({ onSave, onClose,
                     disabled={isSuggesting}
                     className="text-[10px] font-black text-[#1AA3D9] uppercase tracking-widest hover:underline disabled:opacity-50 flex items-center gap-2"
                   >
-                    {isSuggesting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                    {isSuggesting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Orbit className="w-3 h-3" />}
                     Refresh
                   </button>
                 </div>
@@ -427,16 +428,16 @@ export const ModuleDesigner: React.FC<ModuleDesignerProps> = ({ onSave, onClose,
           </div>
         </div>
 
-        <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex gap-4">
+        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-4">
           <button
             onClick={onClose}
-            className="flex-1 px-8 py-4 rounded-2xl border border-slate-200 text-slate-600 font-black uppercase tracking-widest text-xs hover:bg-white transition-all"
+            className="flex-1 px-6 py-3.5 rounded-2xl border border-slate-200 text-slate-600 font-black uppercase tracking-widest text-[10px] hover:bg-white transition-all"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="flex-[2] px-8 py-4 rounded-2xl bg-[#0D0D0D] text-white font-black uppercase tracking-widest text-xs shadow-premium hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="flex-[2] px-6 py-3.5 rounded-2xl bg-[#0D0D0D] text-white font-black uppercase tracking-widest text-[10px] shadow-premium hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             Save Module
           </button>
