@@ -174,7 +174,6 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
           quality: 0.95,
           pixelRatio: 2.5,
           cacheBust: true,
-          useCORS: true,
           style: { 
             transform: 'scale(1)', 
             margin: '0', 
