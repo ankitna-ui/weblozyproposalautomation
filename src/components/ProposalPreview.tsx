@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ProposalData, PAGES } from '../types';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { toJpeg } from 'html-to-image';
 import { 
   Orbit, 
@@ -121,8 +122,8 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
     try {
       setShowFormatPortal(false);
       setIsExporting(true);
-      setExportProgress(10);
-      setExportStatus('Launching Turbo Export...');
+      setExportProgress(5);
+      setExportStatus('Initializing High-Res Engine...');
 
       const pdf = new jsPDF({
         orientation: 'p',
@@ -135,79 +136,78 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
-      const waitForImages = async (element: HTMLElement) => {
-        const images = Array.from(element.querySelectorAll('img'));
-        await Promise.all(images.map(img => {
-          if (img.complete) return Promise.resolve();
-          return new Promise(resolve => {
-            img.onload = resolve;
-            img.onerror = resolve;
-          });
-        }));
-        // Extra tick for browser paint
-        await new Promise(r => setTimeout(r, 200));
+      // --- Helper: Convert Image to Base64 to bypass CORS and caching issues ---
+      const convertImagesToBase64 = async (container: HTMLElement) => {
+        const imgs = Array.from(container.querySelectorAll('img'));
+        const promises = imgs.map(async (img) => {
+          try {
+            if (img.src.startsWith('data:')) return;
+            const response = await fetch(img.src);
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                img.src = reader.result as string;
+                resolve(null);
+              };
+              reader.readAsDataURL(blob);
+            });
+          } catch (e) {
+            console.warn("Base64 conversion failed for:", img.src, e);
+          }
+        });
+        await Promise.all(promises);
       };
 
-      // Process in small batches for stability + speed
-      const BATCH_SIZE = 1;
-      for (let i = 0; i < pagesElements.length; i += BATCH_SIZE) {
-        const batch = pagesElements.slice(i, i + BATCH_SIZE);
-        setExportStatus(`Pixel-Perfect Capture: Page ${i + 1}...`);
+      for (let i = 0; i < pagesElements.length; i++) {
+        const el = pagesElements[i] as HTMLElement;
+        setExportStatus(`Processing Page ${i + 1} of ${pagesElements.length}...`);
         
-        const batchResults = await Promise.all(batch.map(async (pageEl) => {
-          const el = pageEl as HTMLElement;
-          await waitForImages(el);
-          const pageRect = el.getBoundingClientRect();
-          
-          // Detect links for this page
-          const linkElements = el.querySelectorAll('a');
-          const links = Array.from(linkElements).map(a => {
-            const rect = a.getBoundingClientRect();
-            const url = a.getAttribute('href');
-            return (url && (url.startsWith('http') || url.startsWith('mailto:') || url.startsWith('tel:'))) ? {
-              x: ((rect.left - pageRect.left) / pageRect.width) * pdfWidth,
-              y: ((rect.top - pageRect.top) / pageRect.height) * pdfHeight,
-              w: (rect.width / pageRect.width) * pdfWidth,
-              h: (rect.height / pageRect.height) * pdfHeight,
-              url: url
-            } : null;
-          }).filter(Boolean);
-
-          // Balanced delay for asset readiness and export speed
-          await new Promise(r => setTimeout(r, 100));
-
-          const imgData = await toJpeg(el, {
-            quality: 0.95, // Premium quality
-            pixelRatio: 2.5, // High resolution (Retina-grade)
-            cacheBust: true,
-            style: { 
-              transform: 'scale(1)', 
-              margin: '0', 
-              boxShadow: 'none', 
-              borderRadius: '0',
-              width: '794px', 
-              height: '1123px'
+        // Ensure all images are Base64 for this page
+        await convertImagesToBase64(el);
+        
+        // Use html2canvas for pixel-perfect CSS rendering (better for gradients/dark mode)
+        const canvas = await html2canvas(el, {
+          scale: 2, // High resolution
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: null, // Respect CSS background
+          logging: false,
+          width: 794,
+          height: 1123,
+          onclone: (clonedDoc) => {
+            const clonedEl = clonedDoc.querySelector('.proposal-page') as HTMLElement;
+            if (clonedEl) {
+              clonedEl.style.boxShadow = 'none';
+              clonedEl.style.borderRadius = '0';
+              clonedEl.style.margin = '0';
             }
-          });
-
-          return { imgData, links };
-        }));
-
-        batchResults.forEach((result, batchIdx) => {
-          const globalIdx = i + batchIdx;
-          if (globalIdx > 0) pdf.addPage();
-          // Use 'FAST' compression to keep file size within the requested 2-10MB range
-          pdf.addImage(result.imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
-          
-          result.links?.forEach((link: any) => {
-            pdf.link(link.x, link.y, link.w, link.h, { url: link.url });
-          });
-          
-          setExportProgress(Math.floor(((globalIdx + 1) / pagesElements.length) * 95));
+          }
         });
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+        
+        // Detect links
+        const pageRect = el.getBoundingClientRect();
+        const linkElements = el.querySelectorAll('a');
+        linkElements.forEach(a => {
+          const rect = a.getBoundingClientRect();
+          const url = a.getAttribute('href');
+          if (url && (url.startsWith('http') || url.startsWith('mailto:') || url.startsWith('tel:'))) {
+            const x = ((rect.left - pageRect.left) / pageRect.width) * pdfWidth;
+            const y = ((rect.top - pageRect.top) / pageRect.height) * pdfHeight;
+            const w = (rect.width / pageRect.width) * pdfWidth;
+            const h = (rect.height / pageRect.height) * pdfHeight;
+            pdf.link(x, y, w, h, { url });
+          }
+        });
+
+        setExportProgress(Math.floor(((i + 1) / pagesElements.length) * 100));
       }
 
-      setExportProgress(100);
       pdf.save(`${data.clientName.replace(/\s+/g, '_')}_Proposal.pdf`);
       setTimeout(() => setIsExporting(false), 1000);
     } catch (error: any) {
