@@ -161,32 +161,30 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({ data, onEdit, 
 
       for (let i = 0; i < pagesElements.length; i++) {
         const el = pagesElements[i] as HTMLElement;
-        setExportStatus(`Processing Page ${i + 1} of ${pagesElements.length}...`);
+        setExportStatus(`Pixel-Perfect Capture: Page ${i + 1} of ${pagesElements.length}...`);
         
-        // Ensure all images are Base64 for this page
+        // Step 1: Force all images to Base64 to bypass CORS/Netlify issues
         await convertImagesToBase64(el);
         
-        // Use html2canvas for pixel-perfect CSS rendering (better for gradients/dark mode)
-        const canvas = await html2canvas(el, {
-          scale: 2, // High resolution
+        // Step 2: Extra wait for modern CSS (oklab/oklch) and fonts to settle
+        await new Promise(r => setTimeout(r, 150));
+
+        // Step 3: Capture using toJpeg (handles modern CSS perfectly)
+        const imgData = await toJpeg(el, {
+          quality: 0.95,
+          pixelRatio: 2.5,
+          cacheBust: true,
           useCORS: true,
-          allowTaint: true,
-          backgroundColor: null, // Respect CSS background
-          logging: false,
-          width: 794,
-          height: 1123,
-          onclone: (clonedDoc) => {
-            const clonedEl = clonedDoc.querySelector('.proposal-page') as HTMLElement;
-            if (clonedEl) {
-              clonedEl.style.boxShadow = 'none';
-              clonedEl.style.borderRadius = '0';
-              clonedEl.style.margin = '0';
-            }
+          style: { 
+            transform: 'scale(1)', 
+            margin: '0', 
+            boxShadow: 'none', 
+            borderRadius: '0',
+            width: '794px', 
+            height: '1123px'
           }
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.92);
-        
         if (i > 0) pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
         
